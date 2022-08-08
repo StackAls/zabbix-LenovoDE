@@ -1,0 +1,1344 @@
+zabbix_export:
+  version: '5.4'
+  date: '2022-08-08T07:53:53Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 3bbaceaaf4f44308972535d5a56d5c24
+      template: 'Template Lenovo DE JSON'
+      name: 'Template Lenovo DE JSON'
+      groups:
+        -
+          name: Templates
+      items:
+        -
+          uuid: ed2c53b05be8462ea996047afcb2801e
+          name: 'Hardware controllers JSON'
+          type: HTTP_AGENT
+          key: controllers_json
+          delay: 5m
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/{$LENOVO_WWN}/controllers'
+          output_format: JSON
+        -
+          uuid: 76a5aa75731b4a6d9fc86dfd57f4e2bb
+          name: 'Hardware drives JSON'
+          type: HTTP_AGENT
+          key: drives_json
+          delay: 5m
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/{$LENOVO_WWN}/drives'
+          output_format: JSON
+        -
+          uuid: 09c9f79b0efd4a33ac2e333431ae3e6c
+          name: 'Statistics Controller JSON'
+          type: HTTP_AGENT
+          key: statistics.controller.json
+          delay: 5m
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/{$LENOVO_WWN}/controller-statistics'
+          output_format: JSON
+        -
+          uuid: d8ac3a82c7c54c548bd5d18fbbe9f26e
+          name: 'Statistics Volume JSON'
+          type: HTTP_AGENT
+          key: statistics.volume.json
+          delay: 5m
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/{$LENOVO_WWN}/volume-statistics'
+          output_format: JSON
+        -
+          uuid: f85c2b1c75a44e4bbd52e3384d99bbe5
+          name: 'Storage Status'
+          type: DEPENDENT
+          key: storage_status
+          delay: '0'
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..status
+            -
+              type: LTRIM
+              parameters:
+                - '["'
+            -
+              type: RTRIM
+              parameters:
+                - '"]'
+          master_item:
+            key: system_json
+          triggers:
+            -
+              uuid: dc653413ba61454f8596a734e5032161
+              expression: 'last(/Template Lenovo DE JSON/storage_status)<>"optimal"'
+              name: 'Storage {HOST.NAME} warning - {ITEM.LASTVALUE}'
+              priority: AVERAGE
+        -
+          uuid: 41910d015f6749f2b86df236a653fdf4
+          name: 'Hardware system JSON'
+          type: HTTP_AGENT
+          key: system_json
+          delay: 5m
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/'
+          output_format: JSON
+        -
+          uuid: a7fdcc0356494a2d8e6aa1bf8cbf7ffe
+          name: 'Hardware thin-volumes JSON'
+          type: HTTP_AGENT
+          key: thin-volumes_json
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/{$LENOVO_WWN}/thin-volumes'
+          output_format: JSON
+        -
+          uuid: 5b7bb728a7ab437588231e7303bf9420
+          name: 'Hardware volumes JSON'
+          type: HTTP_AGENT
+          key: volumes_json
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: '{$LENOVO_USER}'
+          password: '{$LENOVO_PASS}'
+          timeout: 5s
+          url: 'https://{HOST.IP}:8443/devmgr/v2/storage-systems/{$LENOVO_WWN}/volumes'
+          output_format: JSON
+        -
+          uuid: 0e50bfcae1c345f884949332f0c4d8d2
+          name: WWN
+          type: DEPENDENT
+          key: wwn
+          delay: '0'
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..[0].wwn'
+            -
+              type: LTRIM
+              parameters:
+                - '["'
+            -
+              type: RTRIM
+              parameters:
+                - '"]'
+          master_item:
+            key: system_json
+      discovery_rules:
+        -
+          uuid: e944fcd129b94a8f966bebe6bf92861a
+          name: 'Statistics controller'
+          type: DEPENDENT
+          key: controller.statistics
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: 8e3a145662e84bb69b69429777acab0b
+              name: 'Statistic controller [{#CONTROLLER}] cacheHitsBytesTotal'
+              type: DEPENDENT
+              key: 'cacheHitsBytesTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''cacheHitsBytesTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 5398b05b69184ee2882fe3f04789a9b3
+              name: 'Statistic controller [{#CONTROLLER}] cacheHitsIopsTotal'
+              type: DEPENDENT
+              key: 'cacheHitsIopsTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''cacheHitsIopsTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 3e7b06ae55424dad87a563e107a62240
+              name: 'Statistic controller [{#CONTROLLER}] maxCpuUtilization'
+              type: DEPENDENT
+              key: 'maxCpuUtilization.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: '%'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''cpuUtilizationStats''].[0].[''maxCpuUtilization''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 33b270c0dde94be3b8868d9f3610f77d
+              name: 'Statistic controller [{#CONTROLLER}] mirrorBytesTotal'
+              type: DEPENDENT
+              key: 'mirrorBytesTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''mirrorBytesTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: f80af3378ef343c7971b40a96482bc78
+              name: 'Statistic controller [{#CONTROLLER}] mirrorIopsTotal'
+              type: DEPENDENT
+              key: 'mirrorIopsTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''mirrorIopsTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 894ff448daa742dc844ae6a512f6ca40
+              name: 'Statistic controller [{#CONTROLLER}] readBytesTotal'
+              type: DEPENDENT
+              key: 'readBytesTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''readBytesTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 28d77168df0d41a4a65225a392b50552
+              name: 'Statistic controller [{#CONTROLLER}] readIopsTotal'
+              type: DEPENDENT
+              key: 'readIopsTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''readIopsTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: ce78bf12ac0740d0b08d20e52d757028
+              name: 'Statistic controller [{#CONTROLLER}] totalBytesServiced'
+              type: DEPENDENT
+              key: 'totalBytesServiced.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''totalBytesServiced''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 77a83aa6cb164a7ab5cb136c2d47a09d
+              name: 'Statistic controller [{#CONTROLLER}] totalIopsServiced'
+              type: DEPENDENT
+              key: 'totalIopsServiced.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''totalIopsServiced''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: 6c998ffe89a24ac2b745b3b405d8b1c8
+              name: 'Statistic controller [{#CONTROLLER}] writeBytesTotal'
+              type: DEPENDENT
+              key: 'writeBytesTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''writeBytesTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+            -
+              uuid: e53530779e7b4bc291d8da2e27825655
+              name: 'Statistic controller [{#CONTROLLER}] writeIopsTotal'
+              type: DEPENDENT
+              key: 'writeIopsTotal.controller.[{#CONTROLLER}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerId == "{#CONTROLLER}")].[''writeIopsTotal''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.controller.json
+          graph_prototypes:
+            -
+              uuid: 5c1c749958134279b48673cb3a366617
+              name: 'Bytes Utilization controller [{#CONTROLLER}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: FFB74D
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'cacheHitsBytesTotal.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '2'
+                  color: 4000FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'readBytesTotal.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '3'
+                  color: 00FF00
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'totalBytesServiced.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '4'
+                  color: FF0000
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'writeBytesTotal.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '5'
+                  color: BF00FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'mirrorBytesTotal.controller.[{#CONTROLLER}]'
+            -
+              uuid: f3aaf1bfeee443b89cf11b2d82dc03de
+              name: 'CPU Utilization controller [{#CONTROLLER}]'
+              ymax_type_1: FIXED
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 199C0D
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'maxCpuUtilization.controller.[{#CONTROLLER}]'
+            -
+              uuid: 981d58a82c2f47e09fae2c1edb3d42bc
+              name: 'IOPs Utilization controller [{#CONTROLLER}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: FFB74D
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'cacheHitsIopsTotal.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '2'
+                  color: 4000FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'readIopsTotal.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '3'
+                  color: 00FF00
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'totalIopsServiced.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '4'
+                  color: FF0000
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'writeIopsTotal.controller.[{#CONTROLLER}]'
+                -
+                  sortorder: '5'
+                  color: BF00FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'mirrorIopsTotal.controller.[{#CONTROLLER}]'
+          master_item:
+            key: statistics.controller.json
+          lld_macro_paths:
+            -
+              lld_macro: '{#CONTROLLER}'
+              path: '$..[''controllerId''].first()'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.body.*'
+        -
+          uuid: ad37667ab60c416eb30214be15517527
+          name: 'Controllers discover'
+          type: DEPENDENT
+          key: controllers.discover
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: c8d0e78046cd4d50a5522c4b4b2afbc4
+              name: 'Status controller {#LABEL}'
+              type: DEPENDENT
+              key: 'status.controller.[{#LABEL}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.controllerRef == "{#CONTROLLER}")].status.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: controllers_json
+              trigger_prototypes:
+                -
+                  uuid: 71774e2cce19432eb056bd55a015a65c
+                  expression: 'last(/Template Lenovo DE JSON/status.controller.[{#LABEL}])<>"optimal"'
+                  name: 'Storage {HOST.NAME} controller {#LABEL} warning - {ITEM.LASTVALUE}'
+                  priority: HIGH
+          master_item:
+            key: controllers_json
+          lld_macro_paths:
+            -
+              lld_macro: '{#CONTROLLER}'
+              path: '$..[''controllerRef''].first()'
+            -
+              lld_macro: '{#LABEL}'
+              path: '$..[''physicalLocation''].[''label''].first()'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.body.*'
+        -
+          uuid: c6eebd7afe2e4f458524add11e3b88c3
+          name: 'Disk discover'
+          type: DEPENDENT
+          key: disk.discover
+          delay: '0'
+          lifetime: 1d
+          item_prototypes:
+            -
+              uuid: 0f4fc2cf43604e92a7f1872ccc6fa550
+              name: 'Drive status [{#LABEL}]'
+              type: DEPENDENT
+              key: 'status.drive.[{#DRIVE}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.driveRef == "{#DRIVE}")].status.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: drives_json
+              trigger_prototypes:
+                -
+                  uuid: a9cadfca2f464526948515a41127ef20
+                  expression: 'last(/Template Lenovo DE JSON/status.drive.[{#DRIVE}])<>"optimal"'
+                  name: 'Storage {HOST.NAME} drive [{#LABEL}] warning - {ITEM.LASTVALUE}'
+                  url: 'https://{HOST.IP}:8443/'
+                  priority: AVERAGE
+            -
+              uuid: bcb61043024a4c4dbf96cd489047530e
+              name: 'Drive temperature [{#LABEL}]'
+              type: DEPENDENT
+              key: 'temperature.drive.[{#DRIVE}]'
+              delay: '0'
+              units: C
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.driveRef == "{#DRIVE}")].driveTemperature.currentTemp.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: drives_json
+            -
+              uuid: 1c8522c783f940e5bfb27dae1f57d533
+              name: 'Drive temperature warn [{#LABEL}]'
+              type: DEPENDENT
+              key: 'temperature.max.drive.[{#DRIVE}]'
+              delay: '0'
+              units: C
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.driveRef == "{#DRIVE}")].driveTemperature.refTemp.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: drives_json
+          trigger_prototypes:
+            -
+              uuid: b34a0bc0d1ff4df8860f50aae68bd2d5
+              expression: 'last(/Template Lenovo DE JSON/temperature.drive.[{#DRIVE}])>=last(/Template Lenovo DE JSON/temperature.max.drive.[{#DRIVE}])'
+              name: 'Storage {HOST.NAME} temperature drive [{#LABEL}] warning - {ITEM.LASTVALUE}'
+              priority: HIGH
+          graph_prototypes:
+            -
+              uuid: 90657606674f4314ad1668e5843b405d
+              name: 'Temperature drive [{#LABEL}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 199C0D
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'temperature.drive.[{#DRIVE}]'
+                -
+                  sortorder: '2'
+                  color: F63100
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'temperature.max.drive.[{#DRIVE}]'
+          master_item:
+            key: drives_json
+          lld_macro_paths:
+            -
+              lld_macro: '{#DRIVE}'
+              path: '$..[''driveRef''].first()'
+            -
+              lld_macro: '{#LABEL}'
+              path: '$..[''physicalLocation''].[''label''].first()'
+            -
+              lld_macro: '{#SN}'
+              path: '$..[''serialNumber''].first()'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.body.*'
+        -
+          uuid: c1a961573c1845b9bdad9724f8830583
+          name: 'Thin Volumes discover'
+          type: DEPENDENT
+          key: tvolumes.discover
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: dba70322468e444087572f4d373a36bb
+              name: 'Capacity [{#LABEL}]'
+              type: DEPENDENT
+              key: 'capacity.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].[''capacity''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: 9447043fefe24d42836ac6066a29d8cb
+              name: 'Current provisioned capacity [{#LABEL}]'
+              type: DEPENDENT
+              key: 'currentProvisionedCapacity.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].[''currentProvisionedCapacity''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: f822e343070148eeb2d1cc8bcea24ccb
+              name: 'Alert Threshold growth [{#LABEL}]'
+              type: DEPENDENT
+              key: 'growth.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              units: '%'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].[''growthAlertThreshold''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: 0020e4eb532a499e9f05f9e3527908bf
+              name: 'Initial provisioned capacity [{#LABEL}]'
+              type: DEPENDENT
+              key: 'initialProvisionedCapacity.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].[''initialProvisionedCapacity''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: 89131273960a4de58afdddcf5f67ec2a
+              name: 'Label thin volume [{#LABEL}]'
+              type: DEPENDENT
+              key: 'label.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].label.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: 2586035e173b4aacab66b201b96878b2
+              name: 'Max virtual capacity [{#LABEL}]'
+              type: DEPENDENT
+              key: 'maxVirtualCapacity.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].[''maxVirtualCapacity''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: 19f3da11b7e742408e2b0052b83cd281
+              name: 'Provisioned capacity quota [{#LABEL}]'
+              type: DEPENDENT
+              key: 'provisionedCapacityQuota.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].[''provisionedCapacityQuota''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+            -
+              uuid: 1c30e12132e64edf9881933875b0e849
+              name: 'Status thin volume [{#LABEL}]'
+              type: DEPENDENT
+              key: 'status.tvolume.[{#TVOLUME}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#TVOLUME}")].status.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: thin-volumes_json
+              trigger_prototypes:
+                -
+                  uuid: 6a249fda4ab74d2a9e8b99b62041adf8
+                  expression: 'last(/Template Lenovo DE JSON/status.tvolume.[{#TVOLUME}])<>"optimal"'
+                  name: 'Storage {HOST.NAME} warning Thin volume [{#LABEL}] - {ITEM.LASTVALUE}'
+                  priority: AVERAGE
+          trigger_prototypes:
+            -
+              uuid: 7f12d7daab4943c19a639ee29e1df9e7
+              expression: |
+                last(/Template Lenovo DE JSON/currentProvisionedCapacity.tvolume.[{#TVOLUME}])/
+                last(/Template Lenovo DE JSON/provisionedCapacityQuota.tvolume.[{#TVOLUME}]) <= last(/Template Lenovo DE JSON/growth.tvolume.[{#TVOLUME}])/100
+              name: 'Storage {HOST.NAME} Thin Volume [{#LABEL}] - Allocated Capacity Limit Threshold Exceeded > {ITEM.LASTVALUE3}'
+              status: DISABLED
+              priority: AVERAGE
+          master_item:
+            key: thin-volumes_json
+          lld_macro_paths:
+            -
+              lld_macro: '{#LABEL}'
+              path: '$..[''label''].first()'
+            -
+              lld_macro: '{#TVOLUME}'
+              path: '$..[''volumeRef''].first()'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.body.*'
+        -
+          uuid: 61caf5b1ad354b028e64fb8263fd2ad8
+          name: 'Statistics volume'
+          type: DEPENDENT
+          key: volume.statistics
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: bf9761de6b8a48cc90af340c71f3c884
+              name: 'Statistic volume [{#VOLUME}] readBytes'
+              type: DEPENDENT
+              key: 'readBytes.volume.[{#VOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeName == "{#VOLUME}")].[''readBytes''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.volume.json
+            -
+              uuid: fb572d6b53254d38b164f8c981cb5974
+              name: 'Statistic volume [{#VOLUME}] readOps'
+              type: DEPENDENT
+              key: 'readOps.volume.[{#VOLUME}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeName == "{#VOLUME}")].[''readOps''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.volume.json
+            -
+              uuid: a730735167704982a4ea8c2590936b4e
+              name: 'Statistic volume [{#VOLUME}] readTimeMax'
+              type: DEPENDENT
+              key: 'readTimeMax.volume.[{#VOLUME}]'
+              delay: '0'
+              units: ms
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeName == "{#VOLUME}")].[''readTimeMax''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+              master_item:
+                key: statistics.volume.json
+            -
+              uuid: b128ef364ebf44abaa77874ed2710e57
+              name: 'Statistic volume [{#VOLUME}] writeBytes'
+              type: DEPENDENT
+              key: 'writeBytes.volume.[{#VOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeName == "{#VOLUME}")].[''writeBytes''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.volume.json
+            -
+              uuid: 4f7dbedd20bc4973bc11ca4692c840ac
+              name: 'Statistic volume [{#VOLUME}] writeOps'
+              type: DEPENDENT
+              key: 'writeOps.volume.[{#VOLUME}]'
+              delay: '0'
+              units: IOPs
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeName == "{#VOLUME}")].[''writeOps''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+                -
+                  type: SIMPLE_CHANGE
+                  parameters:
+                    - ''
+              master_item:
+                key: statistics.volume.json
+            -
+              uuid: 391d5821dbec409f86dea2deb41e18db
+              name: 'Statistic volume [{#VOLUME}] writeTimeMax'
+              type: DEPENDENT
+              key: 'writeTimeMax.volume.[{#VOLUME}]'
+              delay: '0'
+              units: ms
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeName == "{#VOLUME}")].[''writeTimeMax''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1'
+              master_item:
+                key: statistics.volume.json
+          graph_prototypes:
+            -
+              uuid: ccf35a10153e4d21b1dd3e0dc2e5b6ba
+              name: 'Bytes Utilization volume [{#VOLUME}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 4000FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'readBytes.volume.[{#VOLUME}]'
+                -
+                  sortorder: '2'
+                  color: FF0000
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'writeBytes.volume.[{#VOLUME}]'
+            -
+              uuid: 7fdcffd1ce1547b0b16b6bdc16a05af8
+              name: 'IOPs Utilization volume [{#VOLUME}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 4000FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'readOps.volume.[{#VOLUME}]'
+                -
+                  sortorder: '2'
+                  color: FF0000
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'writeOps.volume.[{#VOLUME}]'
+            -
+              uuid: 5fca4f22d5af48828972583665587b5d
+              name: 'Latency volume [{#VOLUME}]'
+              graph_items:
+                -
+                  sortorder: '1'
+                  color: 4000FF
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'readTimeMax.volume.[{#VOLUME}]'
+                -
+                  sortorder: '2'
+                  color: FF0000
+                  item:
+                    host: 'Template Lenovo DE JSON'
+                    key: 'writeTimeMax.volume.[{#VOLUME}]'
+          master_item:
+            key: statistics.volume.json
+          lld_macro_paths:
+            -
+              lld_macro: '{#VOLUME}'
+              path: '$..[''volumeName''].first()'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.body.*'
+        -
+          uuid: 54d37dafb5c3458db440cc72fa99f28b
+          name: 'Volumes discover'
+          type: DEPENDENT
+          key: volumes.discover
+          delay: '0'
+          item_prototypes:
+            -
+              uuid: 091c3be107164eb580e99f105fda5335
+              name: 'Capacity [{#LABEL}]'
+              type: DEPENDENT
+              key: 'capacity.volume.[{#VOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#VOLUME}")].[''capacity''].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: volumes_json
+            -
+              uuid: 8b431dcbec484007831a303125cc9fb5
+              name: 'Label volume [{#LABEL}]'
+              type: DEPENDENT
+              key: 'label.volume.[{#VOLUME}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#VOLUME}")].label.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: volumes_json
+            -
+              uuid: 4032c039b9db42c58fd91ad964e5c55c
+              name: 'Status volume [{#LABEL}]'
+              type: DEPENDENT
+              key: 'status.volume.[{#VOLUME}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#VOLUME}")].status.first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: volumes_json
+              trigger_prototypes:
+                -
+                  uuid: 072589c98b4e4783bc65067687ed1421
+                  expression: 'last(/Template Lenovo DE JSON/status.volume.[{#VOLUME}])<>"optimal"'
+                  name: 'Storage {HOST.NAME} warning volume [{#VOLUME}] - {ITEM.LASTVALUE}'
+                  priority: AVERAGE
+            -
+              uuid: 4ea3b61c1ca241aeaa755eedc8d51dd8
+              name: 'Total size [{#LABEL}]'
+              type: DEPENDENT
+              key: 'total.volume.[{#VOLUME}]'
+              delay: '0'
+              units: B
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$..[?(@.volumeRef == "{#VOLUME}")].["totalSizeInBytes"].first()'
+                -
+                  type: LTRIM
+                  parameters:
+                    - '["'
+                -
+                  type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: volumes_json
+          master_item:
+            key: volumes_json
+          lld_macro_paths:
+            -
+              lld_macro: '{#LABEL}'
+              path: '$..[''label''].first()'
+            -
+              lld_macro: '{#VOLUME}'
+              path: '$..[''volumeRef''].first()'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.body.*'
+      macros:
+        -
+          macro: '{$LENOVO_LOGIN}'
+          value: monitor
+        -
+          macro: '{$LENOVO_PASS}'
+        -
+          macro: '{$LENOVO_WWN}'
